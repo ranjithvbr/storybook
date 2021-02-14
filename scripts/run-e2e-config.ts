@@ -16,10 +16,9 @@ const baseAngular: Parameters = {
   name: 'angular',
   version: 'latest',
   generator: [
-    `yarn add @angular/cli@{{version}} --no-lockfile --non-interactive --silent --no-progress`,
+    `yarn add @angular/cli@{{version}}`,
     `yarn ng new {{name}}-{{version}} --routing=true --minimal=true --style=scss --skipInstall=true --strict --packageManager=npm`,
     `cd {{name}}-{{version}}`,
-    `yarn install`,
   ].join(' && '),
 };
 
@@ -185,7 +184,7 @@ export const react_in_yarn_workspace: Parameters = {
   generator: [
     'cd {{name}}-{{version}}',
     'echo "{ \\"name\\": \\"workspace-root\\", \\"private\\": true, \\"workspaces\\": [] }" > package.json',
-    `yarn add react react-dom --silent -W`,
+    `yarn add react react-dom`,
   ].join(' && '),
 };
 

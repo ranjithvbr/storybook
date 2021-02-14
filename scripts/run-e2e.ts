@@ -80,15 +80,18 @@ const configureYarn2PnP = async ({ cwd }: Options) => {
   const command = [
     `yarn set version berry`,
     // ⚠️ Need to set registry because Yarn 2 is not using the conf of Yarn 1
-    `yarn config set npmScopes --json '{ "storybook": { "npmRegistryServer": "http://localhost:6000/" } }'`,
+    // `yarn config set npmScopes --json '{ "storybook": { "npmRegistryServer": "http://localhost:6000/" } }'`,
     // Some required magic to be able to fetch deps from local registry
     `yarn config set unsafeHttpWhitelist --json '["localhost"]'`,
     // Disable fallback mode to make sure everything is required correctly
     `yarn config set pnpFallbackMode none`,
+    // Disable fallback mode to make sure everything is required correctly
+    `yarn config set enableGlobalCache true`,
     // Add package extensions
     // https://github.com/facebook/create-react-app/pull/9872
     `yarn config set "packageExtensions.react-scripts@*.peerDependencies.react" "*"`,
     `yarn config set "packageExtensions.react-scripts@*.dependencies.@pmmmwh/react-refresh-webpack-plugin" "*"`,
+    useYarn2PnP ? '' : 'yarn config set nodeLinker node-modules',
   ].join(' && ');
   logger.info(`🎛 Configuring Yarn 2`);
   logger.debug(command);
@@ -125,7 +128,7 @@ const initStorybook = async ({ cwd, autoDetect = true, name }: Options) => {
 
     const sbCLICommand = useLocalSbCli
       ? 'node ../../storybook/lib/cli/dist/esm/generate'
-      : 'npx -p @storybook/cli sb';
+      : 'yarn dlx -p @storybook/cli sb';
 
     await exec(`${sbCLICommand} init --yes ${type}`, { cwd });
   } catch (e) {
@@ -142,7 +145,7 @@ const addRequiredDeps = async ({ cwd, additionalDeps }: Options) => {
         cwd,
       });
     } else {
-      await exec(`yarn install`, {
+      await exec(`touch yarn.lock && yarn install`, {
         cwd,
       });
     }
@@ -226,9 +229,11 @@ const runTests = async ({ name, version, ...rest }: Parameters) => {
   logger.log();
 
   if (!(await prepareDirectory(options))) {
-    if (useYarn2PnP) {
-      await configureYarn2PnP({ ...options, cwd: siblingDir });
-    }
+    // if (useYarn2PnP) {
+    await configureYarn2PnP({ ...options, cwd: siblingDir });
+    // } else {
+    //   await exec('yarn config set nodeLinker node-modules', { cwd: siblingDir });
+    // }
 
     await generate({ ...options, cwd: siblingDir });
     logger.log();
